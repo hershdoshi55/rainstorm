@@ -1,0 +1,107 @@
+networks:
+  rainstorm-net:
+    driver: bridge
+
+# Shared build/network config reused by all node services
+x-node-common: &node-common
+  build:
+    context: .
+    dockerfile: Dockerfile
+  networks:
+    - rainstorm-net
+  restart: unless-stopped
+  volumes:
+    # Mount dataset so daemons copy CSVs into their source dir at startup (read-only, no RemoveAll conflict)
+    - ./rainstorm_dataset:/home/mp4/rainstorm-c7/rainstorm_dataset:ro
+
+services:
+  node01:
+    <<: *node-common
+    hostname: node01
+    container_name: rainstorm-node01
+    command:
+      - /app/rainstormd
+      - -is-introducer
+      - -stage-config-map
+      - "stage0 echo-wrapper 100 200 stage1 echo-wrapper x2 stage2 echo-wrapper"
+    ports:
+      - "8080:8080"    # membership admin API
+      - "10010:10010"  # HyDFS HTTP
+      - "15000:15000"  # RainStorm HTTP
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "-", "http://localhost:8080/list_mem"]
+      interval: 2s
+      timeout: 5s
+      retries: 15
+      start_period: 5s
+
+  node02:
+    <<: *node-common
+    hostname: node02
+    container_name: rainstorm-node02
+    command:
+      - /app/rainstormd
+      - -introducer=node01:6000
+      - -stage-config-map
+      - "stage0 echo-wrapper 100 200 stage1 echo-wrapper x2 stage2 echo-wrapper"
+    depends_on:
+      node01:
+        condition: service_healthy
+
+  node03:
+    <<: *node-common
+    hostname: node03
+    container_name: rainstorm-node03
+    command:
+      - /app/rainstormd
+      - -introducer=node01:6000
+      - -stage-config-map
+      - "stage0 echo-wrapper 100 200 stage1 echo-wrapper x2 stage2 echo-wrapper"
+    depends_on:
+      node01:
+        condition: service_healthy
+
+  node04:
+    <<: *node-common
+    hostname: node04
+    container_name: rainstorm-node04
+    command:
+      - /app/rainstormd
+      - -introducer=node01:6000
+      - -stage-config-map
+      - "stage0 echo-wrapper 100 200 stage1 echo-wrapper x2 stage2 echo-wrapper"
+    depends_on:
+      node01:
+        condition: service_healthy
+
+  node05:
+    <<: *node-common
+    hostname: node05
+    container_name: rainstorm-node05
+    command:
+      - /app/rainstormd
+      - -introducer=node01:6000
+      - -stage-config-map
+      - "stage0 echo-wrapper 100 200 stage1 echo-wrapper x2 stage2 echo-wrapper"
+    depends_on:
+      node01:
+        condition: service_healthy
+
+  ctl:
+    <<: *node-common
+    hostname: ctl
+    container_name: rainstorm-ctl
+    command:
+      - /app/rainstormctl
+      - -is-ctl-client
+      - -hydfs-http=node01:10010
+      - -rainstorm-http=node01:15000
+    stdin_open: true
+    tty: true
+    restart: "no"
+    depends_on:
+      node01:
+        condition: service_healthy
+    volumes:
+      # Drop files here on the host, then use `create /home/mp4/local_file_store/<file>` in ctl
+      - ./ctl_data:/home/mp4/local_file_store

@@ -1,0 +1,23 @@
+# macOS
+.DS_Store
+**/.DS_Store
+
+# Claude Code
+.claude/
+CLAUDE.md
+
+# ctl runtime volume — users drop files here locally, only seed.txt is needed
+RainStorm/ctl_data/*
+!RainStorm/ctl_data/seed.txt
+
+# Old distributed grep test data — not needed for Docker demo
+RainStorm/dataset/
+
+# University assignment PDFs (copyrighted course materials)
+*.pdf
+
+# Compiled binaries duplicated inside binaries_source/ (canonical copies live in binaries/)
+RainStorm/src/rainstorm/binaries_source/aggregateByKey/aggregate-wrapper
+RainStorm/src/rainstorm/binaries_source/grep/grep-wrapper
+RainStorm/src/rainstorm/binaries_source/grep2/grep-wrapper2
+RainStorm/src/rainstorm/binaries_source/transform/transform-wrapper
