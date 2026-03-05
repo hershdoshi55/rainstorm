@@ -8,9 +8,10 @@ A distributed stream processing system built from scratch in Go, combining a cus
 
 - [Overview](#overview)
 - [System Architecture](#system-architecture)
-- [Component 1 — Membership & Failure Detection](#component-1--membership--failure-detection)
-- [Component 2 — HyDFS Distributed File System](#component-2--hydfs-distributed-file-system)
-- [Component 3 — RainStorm Stream Processing Engine](#component-3--rainstorm-stream-processing-engine)
+- [Component 1 — Distributed Grep](#component-1--distributed-grep)
+- [Component 2 — Membership & Failure Detection](#component-2--membership--failure-detection)
+- [Component 3 — HyDFS Distributed File System](#component-3--hydfs-distributed-file-system)
+- [Component 4 — RainStorm Stream Processing Engine](#component-4--rainstorm-stream-processing-engine)
 - [Performance: RainStorm vs Apache Spark Streaming](#performance-rainstorm-vs-apache-spark-streaming)
 - [Running Locally with Docker](#running-locally-with-docker)
 - [Command Reference](#command-reference)
@@ -47,7 +48,15 @@ Routing between stages uses hash partitioning on the tuple key, while tuple iden
 
 ---
 
-## Component 1 — Membership & Failure Detection
+## Component 1 — Distributed Grep
+
+The first layer implements distributed grep — a MapReduce-style search across a set of files spread over multiple machines. A coordinator dispatches grep tasks to worker nodes, each of which searches its local files for lines matching a regex pattern. Results are streamed back to the coordinator and merged into a single output, giving grep-at-scale across the entire cluster with no single machine needing to hold all the data.
+
+This layer established the core patterns used throughout the rest of the project: fan-out task dispatch, parallel execution on worker nodes, and result aggregation — the same model that HyDFS and RainStorm build on.
+
+---
+
+## Component 2 — Membership & Failure Detection
 
 The membership layer provides every node with a consistent, eventually-convergent view of which nodes are alive. It supports two protocols, switchable at runtime:
 
@@ -77,7 +86,7 @@ New nodes join by contacting the introducer over TCP (port 6000). The introducer
 
 ---
 
-## Component 2 — HyDFS Distributed File System
+## Component 3 — HyDFS Distributed File System
 
 HyDFS (Hybrid Distributed File System) is a distributed object store designed for append-heavy workloads. It stores logical files as ordered sequences of chunks with a manifest per file that records all append operations with client IDs, sequence numbers, and timestamps.
 
@@ -101,7 +110,7 @@ HyDFS (Hybrid Distributed File System) is a distributed object store designed fo
 
 ---
 
-## Component 3 — RainStorm Stream Processing Engine
+## Component 4 — RainStorm Stream Processing Engine
 
 RainStorm processes data as a directed acyclic pipeline of stages. Each stage contains N parallel tasks distributed across worker nodes. The introducer VM runs the leader; all other nodes run workers.
 
