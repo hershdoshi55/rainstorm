@@ -184,7 +184,7 @@ As dataset size increases (25k → 50k rows), the performance gap narrows — Sp
 
 ## Running Locally with Docker
 
-The system was originally deployed on university VMs (`fa25-cs425-33XX.cs.illinois.edu`) which are no longer accessible. Docker replicates the multi-node distributed environment faithfully: each container gets its own hostname, network namespace, and IP address, and Docker's internal DNS handles inter-node name resolution — exactly like the VM setup.
+The system was originally deployed on university VMs (`fa25-cs425-c7XX.cs.illinois.edu`) which are no longer accessible. Docker replicates the multi-node distributed environment faithfully: each container gets its own hostname, network namespace, and IP address, and Docker's internal DNS handles inter-node name resolution — exactly like the VM setup.
 
 ### Prerequisites
 
